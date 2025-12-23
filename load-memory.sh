@@ -1,213 +1,153 @@
 #!/bin/bash
 # =============================================================================
-# load-memory.sh - 通用自動載入記憶腳本
+# load-memory.sh - 專案記憶載入腳本
 #
 # 位置: ~/.claude/hooks/load-memory.sh
 # 用途: 在 /clear 或啟動時自動載入專案記憶
-#
-# 功能:
-# 1. 載入本地專案狀態 (Git, specs/)
-# 2. 查詢 Letta 長期記憶 (如果 server 運行中)
-# 3. 顯示開發提醒
 # =============================================================================
 
-# 專案目錄 (Claude Code 會設定 CLAUDE_PROJECT_DIR)
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PROJECT_NAME=$(basename "$PROJECT_DIR")
-
-# Letta 設定 (可透過環境變數覆蓋)
 LETTA_BASE_URL="${LETTA_BASE_URL:-http://localhost:8283}"
 
-# 顏色 (如果終端支援)
-if [ -t 1 ]; then
-    BOLD='\033[1m'
-    RESET='\033[0m'
-else
-    BOLD=''
-    RESET=''
-fi
+# 顏色定義
+C_RESET='\033[0m'
+C_DIM='\033[2m'
+C_CYAN='\033[36m'
+C_YELLOW='\033[33m'
+C_GREEN='\033[32m'
+C_RED='\033[31m'
+C_BOLD='\033[1m'
 
-echo "╔═══════════════════════════════════════════════════════════════════════╗"
-echo "║  📚 自動載入專案記憶 - $PROJECT_NAME"
-echo "╚═══════════════════════════════════════════════════════════════════════╝"
-echo ""
+# 標題
+echo "Memory"
+echo -e "${C_BOLD}${C_CYAN}╭───────────────────────────────────────────────╮${C_RESET}"
+echo -e "${C_BOLD}${C_CYAN}│${C_RESET}  📚 ${C_BOLD}$PROJECT_NAME${C_RESET}"
+echo -e "${C_BOLD}${C_CYAN}╰───────────────────────────────────────────────╯${C_RESET}"
 
-# -----------------------------------------------------------------------------
-# Part 1: 本地專案狀態
-# -----------------------------------------------------------------------------
-echo "┌─────────────────────────────────────────────────────────────────────┐"
-echo "│  🔍 本地專案狀態                                                    │"
-echo "└─────────────────────────────────────────────────────────────────────┘"
+cd "$PROJECT_DIR" 2>/dev/null || exit 0
 
-cd "$PROJECT_DIR" 2>/dev/null || {
-    echo "⚠️  無法進入專案目錄: $PROJECT_DIR"
-    exit 0
-}
-
-# 檢查是否為 Git 專案
+# ─── Git 狀態 ────────────────────────────────────────
 if [ -d ".git" ]; then
-    echo ""
-    echo "📊 Git 狀態:"
     BRANCH=$(git branch --show-current 2>/dev/null)
-    echo "   分支: ${BRANCH:-'(detached)'}"
-    echo "   最近 commit:"
-    git log --oneline -3 2>/dev/null | sed 's/^/   /' || echo "   (無 commit)"
-
-    # 未提交的變更
     CHANGES=$(git status --short 2>/dev/null | wc -l | tr -d ' ')
-    if [ "$CHANGES" -gt 0 ]; then
-        echo ""
-        echo "   ⚠️  有 $CHANGES 個未提交的變更"
-    fi
-else
+    LAST_COMMIT=$(git log --oneline -1 2>/dev/null | cut -c1-50)
+
     echo ""
-    echo "📊 專案狀態: (非 Git 專案)"
+    echo -e "${C_DIM}─── Git ───${C_RESET}"
+    echo -e "  ${C_BOLD}$BRANCH${C_RESET}  ${C_DIM}$LAST_COMMIT${C_RESET}"
+
+    # 顯示最近 3 個 commits
+    echo -e "${C_DIM}"
+    git log --oneline -3 2>/dev/null | tail -2 | sed 's/^/  /'
+    echo -e "${C_RESET}"
+
+    if [ "$CHANGES" -gt 0 ]; then
+        echo -e "  ${C_YELLOW}⚠ $CHANGES 個未提交變更${C_RESET}"
+    fi
 fi
 
-# 檢查規格文件 (支援多種目錄結構)
-echo ""
-echo "📋 進行中的規格:"
+# ─── 規格進度 ────────────────────────────────────────
 SPECS_DIR=""
-for dir in "docs/specs" "specs" ".specs" "documentation/specs"; do
-    if [ -d "$dir" ]; then
-        SPECS_DIR="$dir"
-        break
-    fi
+for dir in "docs/specs" "specs" ".specs"; do
+    [ -d "$dir" ] && SPECS_DIR="$dir" && break
 done
 
 if [ -n "$SPECS_DIR" ]; then
-    FOUND_TASKS=0
-    find "$SPECS_DIR" -name "tasks.md" -mtime -14 2>/dev/null | head -5 | while read -r task_file; do
-        if [ -n "$task_file" ]; then
+    TASKS_FILES=$(find "$SPECS_DIR" -name "tasks.md" -mtime -14 2>/dev/null | head -5)
+
+    if [ -n "$TASKS_FILES" ]; then
+        echo ""
+        echo -e "${C_DIM}─── 規格 ───${C_RESET}"
+
+        echo "$TASKS_FILES" | while read -r task_file; do
+            [ -z "$task_file" ] && continue
             spec_name=$(dirname "$task_file" | xargs basename)
-            in_progress=$(grep -c '\[~\]' "$task_file" 2>/dev/null)
-            in_progress=${in_progress:-0}
+
+            # 計算任務數
+            in_prog=$(grep -c '\[~\]' "$task_file" 2>/dev/null)
+            in_prog=${in_prog:-0}
             pending=$(grep -c '\[ \]' "$task_file" 2>/dev/null)
             pending=${pending:-0}
             completed=$(grep -c '\[x\]' "$task_file" 2>/dev/null)
             completed=${completed:-0}
-            total=$((in_progress + pending + completed))
-            if [ "$total" -gt 0 ]; then
-                printf "   • %s: %d 進行中, %d 待處理, %d 完成\n" "$spec_name" "$in_progress" "$pending" "$completed"
-                FOUND_TASKS=1
+
+            total=$((in_prog + pending + completed))
+            [ "$total" -eq 0 ] && continue
+
+            # 進度條 (固定 16 格)
+            pct=$((completed * 100 / total))
+            bar_done=$((pct * 16 / 100))
+            [ "$bar_done" -lt 0 ] && bar_done=0
+            [ "$bar_done" -gt 16 ] && bar_done=16
+            bar_empty=$((16 - bar_done))
+
+            bar=$(python3 -c "print('█' * $bar_done + '░' * $bar_empty)" 2>/dev/null || printf '%*s' 16 | tr ' ' '░')
+
+            # 狀態顯示
+            if [ "$in_prog" -gt 0 ]; then
+                status=" \033[33m~${in_prog}\033[0m"
+            else
+                status=""
             fi
-        fi
-    done
-    if [ "$(find "$SPECS_DIR" -name 'tasks.md' -mtime -14 2>/dev/null | wc -l)" -eq 0 ]; then
-        echo "   (無最近 14 天內修改的規格)"
+
+            printf "  \033[2m%s\033[0m %-22s \033[32m%d\033[0m/\033[2m%d\033[0m%b\n" \
+                "$bar" "$spec_name" "$completed" "$total" "$status"
+        done
     fi
-else
-    echo "   (無規格目錄)"
 fi
 
-# 檢查 CLAUDE.md
-if [ -f "CLAUDE.md" ]; then
-    echo ""
-    echo "📄 CLAUDE.md: ✅ 存在"
-else
-    echo ""
-    echo "📄 CLAUDE.md: ❌ 不存在 (建議建立)"
-fi
+# ─── Letta 狀態 ──────────────────────────────────────
+LETTA_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 1 "$LETTA_BASE_URL/health" 2>/dev/null)
 
-# -----------------------------------------------------------------------------
-# Part 2: Letta 長期記憶
-# -----------------------------------------------------------------------------
 echo ""
-echo "┌─────────────────────────────────────────────────────────────────────┐"
-echo "│  🧠 長期記憶 (Letta)                                                │"
-echo "└─────────────────────────────────────────────────────────────────────┘"
-
-# 檢查 Letta server
-LETTA_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "$LETTA_BASE_URL/health" 2>/dev/null)
+echo -e "${C_DIM}─── Memory ───${C_RESET}"
 
 if [ "$LETTA_HEALTH" = "200" ]; then
-    echo ""
-    echo "✅ Letta Server 連線正常 ($LETTA_BASE_URL)"
-    echo ""
+    echo -e "  ${C_GREEN}●${C_RESET} Letta  ${C_DIM}${LETTA_BASE_URL}${C_RESET}"
 
     # 查詢 agents
-    AGENTS_RESPONSE=$(curl -s --connect-timeout 2 "$LETTA_BASE_URL/v1/agents" 2>/dev/null)
+    AGENTS_RESPONSE=$(curl -s --connect-timeout 1 "$LETTA_BASE_URL/v1/agents" 2>/dev/null)
 
     if [ -n "$AGENTS_RESPONSE" ] && [ "$AGENTS_RESPONSE" != "[]" ] && [ "$AGENTS_RESPONSE" != "null" ]; then
-        echo "📁 可用的 Agents:"
         echo "$AGENTS_RESPONSE" | python3 -c "
 import json, sys
 try:
     agents = json.load(sys.stdin)
-    if isinstance(agents, list):
-        for agent in agents[:5]:
+    if isinstance(agents, list) and len(agents) > 0:
+        print('  Agents:')
+        for agent in agents[:3]:
             name = agent.get('name', 'unnamed')
             agent_id = agent.get('id', '')[:8]
-            print(f'   • {name} ({agent_id}...)')
-        if len(agents) > 5:
-            print(f'   ... 還有 {len(agents) - 5} 個')
-except Exception as e:
-    print(f'   (解析錯誤: {e})')
-" 2>/dev/null || echo "   (無法解析 agents)"
-
-        # 查詢與專案相關的 agent
-        PROJECT_AGENT=$(echo "$AGENTS_RESPONSE" | python3 -c "
-import json, sys
-project = '$PROJECT_NAME'.lower()
-try:
-    agents = json.load(sys.stdin)
-    for agent in agents:
-        name = agent.get('name', '').lower()
-        if project in name or 'memory' in name:
-            print(agent.get('name'))
-            break
+            print(f'    • {name}')
+        if len(agents) > 3:
+            print(f'    ... +{len(agents) - 3} more')
 except:
     pass
-" 2>/dev/null)
-
-        if [ -n "$PROJECT_AGENT" ]; then
-            echo ""
-            echo "🎯 專案相關 Agent: $PROJECT_AGENT"
-        fi
-
-        echo ""
-        echo "💡 查詢歷史記憶: 「查詢 Letta 中關於 [主題] 的記錄」"
-    else
-        echo "📁 尚無 Agents"
-        echo ""
-        echo "💡 建議建立專案記憶 Agent:"
-        echo "   名稱: $PROJECT_NAME-memory"
+" 2>/dev/null
     fi
 else
-    echo ""
-    echo "⚠️  Letta Server 未運行"
-    echo "   URL: $LETTA_BASE_URL"
-    echo "   啟動: letta server"
-    echo ""
-    echo "💡 目前只使用本地記憶 (CLAUDE.md, specs/)"
+    echo -e "  ${C_DIM}○ Letta offline${C_RESET}"
 fi
 
-# -----------------------------------------------------------------------------
-# Part 3: 開發提醒 (讀取 CLAUDE.md 關鍵規則)
-# -----------------------------------------------------------------------------
-echo ""
-echo "┌─────────────────────────────────────────────────────────────────────┐"
-echo "│  💡 開發提醒                                                        │"
-echo "└─────────────────────────────────────────────────────────────────────┘"
-echo ""
-
-# 檢查 CLAUDE.md 是否有 PDCA 相關內容
-if [ -f "CLAUDE.md" ] && grep -q "PDCA\|Milestone\|規劃" "CLAUDE.md" 2>/dev/null; then
-    echo "• 遵循 CLAUDE.md 中定義的開發原則"
-    echo "• 新功能: 先建立 specs/ 規格文件"
-    echo "• 每個 Milestone 完成後: commit & push"
+# CLAUDE.md 狀態
+if [ -f "CLAUDE.md" ]; then
+    echo -e "  ${C_GREEN}●${C_RESET} CLAUDE.md"
 else
-    echo "• 新功能開始前: 先確認需求和方向"
-    echo "• 遇到問題時: 查詢是否有相關歷史"
-    echo "• 完成功能後: 記得測試和提交"
+    echo -e "  ${C_DIM}○ CLAUDE.md (建議建立)${C_RESET}"
 fi
 
-# 如果有 Letta 連線，加入提醒
-if [ "$LETTA_HEALTH" = "200" ]; then
-    echo "• 🧠 長期記憶可用: 可查詢歷史決策"
+# ─── 提醒 ────────────────────────────────────────────
+if [ -f "CLAUDE.md" ] && grep -q "PDCA\|Milestone" "CLAUDE.md" 2>/dev/null; then
+    echo ""
+    echo -e "${C_DIM}─── 提醒 ───${C_RESET}"
+    echo -e "  ${C_DIM}•${C_RESET} 新功能先建 specs/"
+    echo -e "  ${C_DIM}•${C_RESET} Milestone 完成後 commit"
+    if [ "$LETTA_HEALTH" = "200" ]; then
+        echo -e "  ${C_DIM}•${C_RESET} 🧠 可查詢 Letta 歷史決策"
+    fi
 fi
 
 echo ""
-echo "═══════════════════════════════════════════════════════════════════════"
 
 exit 0
