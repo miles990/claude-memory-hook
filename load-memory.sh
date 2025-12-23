@@ -127,7 +127,27 @@ else
 fi
 
 # ─── 提醒 ────────────────────────────────────────────
-if [ -f "CLAUDE.md" ] && grep -q "PDCA\|Milestone" "CLAUDE.md" 2>/dev/null; then
+# 優先順序: 專案 .claude/reminders.txt > 全域 ~/.claude/reminders.txt > 預設
+REMINDERS_FILE=""
+if [ -f ".claude/reminders.txt" ]; then
+    REMINDERS_FILE=".claude/reminders.txt"
+elif [ -f "$HOME/.claude/reminders.txt" ]; then
+    REMINDERS_FILE="$HOME/.claude/reminders.txt"
+fi
+
+if [ -n "$REMINDERS_FILE" ]; then
+    echo ""
+    echo -e "${C_DIM}─── 提醒 ───${C_RESET}"
+    while IFS= read -r line || [ -n "$line" ]; do
+        [ -z "$line" ] && continue
+        [[ "$line" =~ ^# ]] && continue
+        echo -e "  ${C_DIM}•${C_RESET} $line"
+    done < "$REMINDERS_FILE"
+    if [ "$LETTA_HEALTH" = "200" ]; then
+        echo -e "  ${C_DIM}•${C_RESET} 🧠 可查詢 Letta 歷史決策"
+    fi
+elif [ -f "CLAUDE.md" ] && grep -q "PDCA\|Milestone" "CLAUDE.md" 2>/dev/null; then
+    # 預設提醒（當沒有自訂檔案時）
     echo ""
     echo -e "${C_DIM}─── 提醒 ───${C_RESET}"
     echo -e "  ${C_DIM}•${C_RESET} 新功能先建 specs/"

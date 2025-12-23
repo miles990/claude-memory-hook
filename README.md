@@ -137,15 +137,36 @@ tasks.md 使用標準 markdown checkbox：
 - `specs/`
 - `.specs/`
 
+### 自訂提醒
+
+可建立提醒檔案，每次對話開始時顯示：
+
+```
+~/.claude/reminders.txt              # 全域預設
+your-project/.claude/reminders.txt   # 專案覆蓋（優先）
+```
+
+範例 `.claude/reminders.txt`：
+```
+# 核心指導原則 (MUST FOLLOW)
+新功能必須先建 specs/（規劃優先）
+PDCA 循環：Plan→Do→Check→Act
+按 Milestone 順序執行，完成後 commit
+遇錯先診斷再修正，不盲目重試
+完成後問：目標？方向？下一步？
+```
+
+> 💡 **雙重強化**：提醒內容建議與 `CLAUDE.md` 核心規則同步，這樣 Claude 會在 CLAUDE.md（基礎層）和 Hook 提醒（強化層）雙重注意這些原則。
+
 ### 專案專屬覆蓋
 
-如果特定專案需要不同行為，在專案目錄建立：
+如果特定專案需要完全不同的 hook 行為，可在專案目錄建立：
 
 ```
 your-project/
 └── .claude/
     └── hooks/
-        └── load-memory.sh  # 會覆蓋全域設定
+        └── load-memory.sh  # 會覆蓋全域腳本
 ```
 
 ## 搭配 Letta 使用
