@@ -6,7 +6,7 @@
 
 - **自動載入專案狀態** - Git 分支、最近 commits、未提交變更
 - **規格追蹤** - 顯示進行中的 `tasks.md` 狀態
-- **Letta 整合** - 自動偵測長期記憶 server
+- **Letta 整合** - 支援 Letta Cloud 或本地 Server，自動載入長期記憶
 - **通用設計** - 一次設定，所有專案都能用
 
 ## 截圖
@@ -29,15 +29,14 @@
   • feature-b                    ✓3 ○8
 
 ─── Memory ───
-  ● Letta  http://localhost:8283
-  Agents:
-    • my-project-memory
+  ● Letta Cloud
+    [project] # My Project - 類型: Web application with React...
+    [decisions] # 架構決策 - 選用 Zustand 因為輕量...
   ● CLAUDE.md
 
 ─── 提醒 ───
   • 新功能先建 specs/
   • Milestone 完成後 commit
-  • 🧠 可查詢 Letta 歷史決策
 ```
 
 符號說明：`✓` 完成 · `~` 進行中 · `○` 待處理
@@ -138,7 +137,11 @@ chmod +x ~/.claude/hooks/load-memory.sh
 
 | 變數 | 預設值 | 說明 |
 |------|--------|------|
-| `LETTA_BASE_URL` | `http://localhost:8283` | Letta server URL |
+| `LETTA_API_KEY` | - | Letta Cloud API key（優先使用）|
+| `LETTA_AGENT_ID` | - | 專案專屬的 Letta Agent ID |
+| `LETTA_BASE_URL` | `http://localhost:8283` | 本地 Letta server URL（fallback）|
+
+> 💡 設定 `LETTA_API_KEY` 後會優先使用 Letta Cloud，否則 fallback 到本地 Server。
 
 ### tasks.md 產生方式
 
@@ -208,20 +211,36 @@ your-project/
 
 ## 搭配 Letta 使用
 
-這個 hook 設計用來搭配 [Letta](https://docs.letta.com/) 作為長期記憶後端。
+這個 hook 設計用來搭配 [Letta](https://docs.letta.com/) 作為長期記憶後端，支援 **Letta Cloud** 或**本地 Server**。
 
-### 快速設置 Letta
+### 方式一：Letta Cloud（推薦）
+
+1. 註冊 [Letta Cloud](https://app.letta.com) 取得 API key
+2. 建立 Agent 並取得 Agent ID
+3. 在專案 `.env` 加入：
 
 ```bash
-# 安裝
+LETTA_API_KEY=sk-let-xxxxx
+LETTA_AGENT_ID=agent-xxxxx
+```
+
+或在 `.claude/letta.json` 設定專案專屬 Agent：
+
+```json
+{
+  "agent_id": "agent-xxxxx"
+}
+```
+
+### 方式二：本地 Server
+
+```bash
+# Docker 方式啟動
+docker run -p 8283:8283 letta/letta:latest
+
+# 或 pip 安裝
 pip install letta
-
-# 啟動 server
 letta server
-
-# 加入 Claude Code MCP
-npm install -g letta-mcp-server
-claude mcp add letta -- letta-mcp --env LETTA_BASE_URL=http://localhost:8283/v1
 ```
 
 ### 分層記憶架構
