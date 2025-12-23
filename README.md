@@ -77,15 +77,17 @@ cp ~/.claude/hooks/templates/reminders.txt ./.claude/reminders.txt
 
 ## 前置需求
 
-| 工具 | 用途 | macOS | Linux |
-|------|------|:-----:|:-----:|
-| `bash` | 執行腳本 | ✅ 預裝 | ✅ 預裝 |
-| `git` | 顯示 Git 狀態 | ✅ 預裝 | ✅ 預裝 |
-| `curl` | 檢查 Letta server | ✅ 預裝 | ✅ 預裝 |
-| `python3` | 解析 JSON | ✅ 預裝 | ✅ 預裝 |
-| `find`, `grep` | 檔案搜尋 | ✅ 預裝 | ✅ 預裝 |
+| 工具 | 用途 | macOS | Linux | Windows |
+|------|------|:-----:|:-----:|:-------:|
+| `bash` | 執行腳本 | ✅ 預裝 | ✅ 預裝 | ⚠️ WSL/Git Bash |
+| `git` | 顯示 Git 狀態 | ✅ 預裝 | ✅ 預裝 | ⚠️ 需安裝 |
+| `curl` | 檢查 Letta server | ✅ 預裝 | ✅ 預裝 | ⚠️ WSL/Git Bash |
+| `python3` | 解析 JSON | ✅ 預裝 | ✅ 預裝 | ⚠️ 需安裝 |
+| `find`, `grep` | 檔案搜尋 | ✅ 預裝 | ✅ 預裝 | ⚠️ WSL/Git Bash |
 
-> **macOS 和大多數 Linux 發行版都已預裝所有依賴，無需額外安裝。**
+> **macOS / Linux**：所有依賴預裝，無需額外安裝。
+>
+> **Windows**：需使用 [WSL](https://docs.microsoft.com/windows/wsl/) 或 [Git Bash](https://gitforwindows.org/)。
 
 ## 安裝
 
