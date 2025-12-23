@@ -235,22 +235,6 @@ claude mcp add letta -- letta-mcp --env LETTA_BASE_URL=http://localhost:8283/v1
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 開發
-
-### 貢獻
-
-歡迎 PR！請確保：
-- 腳本在 bash 和 zsh 都能運作
-- 不依賴非標準工具
-- 保持輸出簡潔
-
-### 測試
-
-```bash
-# 測試腳本
-CLAUDE_PROJECT_DIR=/path/to/your/project ~/.claude/hooks/load-memory.sh
-```
-
 ## License
 
 MIT
