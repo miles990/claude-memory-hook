@@ -75,24 +75,13 @@ if [ -n "$SPECS_DIR" ]; then
             total=$((in_prog + pending + completed))
             [ "$total" -eq 0 ] && continue
 
-            # 進度條 (固定 16 格)
-            pct=$((completed * 100 / total))
-            bar_done=$((pct * 16 / 100))
-            [ "$bar_done" -lt 0 ] && bar_done=0
-            [ "$bar_done" -gt 16 ] && bar_done=16
-            bar_empty=$((16 - bar_done))
+            # 簡潔顯示: spec_name: ✓10 ~2 ○5
+            status=""
+            [ "$completed" -gt 0 ] && status="${status}\033[32m✓${completed}\033[0m "
+            [ "$in_prog" -gt 0 ] && status="${status}\033[33m~${in_prog}\033[0m "
+            [ "$pending" -gt 0 ] && status="${status}\033[2m○${pending}\033[0m"
 
-            bar=$(python3 -c "print('█' * $bar_done + '░' * $bar_empty)" 2>/dev/null || printf '%*s' 16 | tr ' ' '░')
-
-            # 狀態顯示
-            if [ "$in_prog" -gt 0 ]; then
-                status=" \033[33m~${in_prog}\033[0m"
-            else
-                status=""
-            fi
-
-            printf "  \033[2m%s\033[0m %-22s \033[32m%d\033[0m/\033[2m%d\033[0m%b\n" \
-                "$bar" "$spec_name" "$completed" "$total" "$status"
+            printf "  • %-28s %b\n" "$spec_name" "$status"
         done
     fi
 fi
