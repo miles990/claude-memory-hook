@@ -42,6 +42,39 @@
 
 符號說明：`✓` 完成 · `~` 進行中 · `○` 待處理
 
+## 範本 (Templates)
+
+專案提供核心指導原則範本，幫助你快速建立 Claude Code 開發規範：
+
+```
+templates/
+├── CLAUDE.md        # 核心指導原則（完整版）
+└── reminders.txt    # 精簡提醒（與 CLAUDE.md 配套）
+```
+
+### 使用方式
+
+```bash
+# 複製範本到你的專案
+cp ~/.claude/hooks/templates/CLAUDE.md ./CLAUDE.md
+mkdir -p .claude
+cp ~/.claude/hooks/templates/reminders.txt ./.claude/reminders.txt
+
+# 根據專案需求修改
+```
+
+### 核心指導原則包含
+
+| 原則 | 說明 |
+|------|------|
+| 先規劃再執行 | 新功能必須先建 specs/ |
+| PDCA 循環 | Plan→Do→Check→Act |
+| Milestone 導向 | 按順序執行，完成後 commit |
+| 有方向的修正 | 遇錯先診斷，不盲目重試 |
+| 目標確認 | 完成後問：目標？方向？下一步？ |
+
+> 💡 這套原則經過實戰驗證，能有效提升 Claude Code 的開發品質和一致性。
+
 ## 前置需求
 
 | 工具 | 用途 | macOS | Linux |

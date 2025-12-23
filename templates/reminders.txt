@@ -1,0 +1,8 @@
+# 核心指導原則 (MUST FOLLOW)
+# 這些規則與 CLAUDE.md 同步，每次對話開始時強化提醒
+
+新功能必須先建 specs/（規劃優先，禁止直接寫程式碼）
+PDCA 循環：Plan→Do→Check→Act，每完成一個檔案就驗證
+按 Milestone 順序執行，完成後 commit & push
+遇錯先診斷再修正，不盲目重試
+完成後問自己：目標是什麼？方向對嗎？下一步？
