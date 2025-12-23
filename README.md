@@ -142,15 +142,17 @@ chmod +x ~/.claude/hooks/load-memory.sh
 
 ### tasks.md 產生方式
 
-推薦使用 [spec-workflow-mcp](https://github.com/kingkongshot/specs-workflow-mcp) 自動產生：
+推薦使用 [@pimzino/spec-workflow-mcp](https://www.npmjs.com/package/@pimzino/spec-workflow-mcp) 自動產生：
 
 ```bash
 # 安裝
-claude mcp add spec-workflow-mcp -s user -- npx -y spec-workflow-mcp@latest
+claude mcp add spec-workflow -s user -- npx -y @pimzino/spec-workflow-mcp@latest
 
-# 初始化新功能規格
-# Claude 會自動產生 docs/specs/{feature}/ 結構
+# 啟動 Dashboard（可選）
+npx -y @pimzino/spec-workflow-mcp@latest --dashboard
 ```
+
+特色：實時 Web Dashboard、VSCode 擴展、審批工作流、11 種語言支援
 
 產生的結構：
 ```
