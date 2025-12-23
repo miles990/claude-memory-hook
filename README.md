@@ -146,7 +146,7 @@ chmod +x ~/.claude/hooks/load-memory.sh
 
 ```bash
 # 安裝
-claude mcp add spec-workflow -- npx spec-workflow-mcp
+claude mcp add spec-workflow-mcp -s user -- npx -y spec-workflow-mcp@latest
 
 # 初始化新功能規格
 # Claude 會自動產生 docs/specs/{feature}/ 結構
