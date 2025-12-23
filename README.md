@@ -105,13 +105,37 @@ chmod +x ~/.claude/hooks/load-memory.sh
 |------|--------|------|
 | `LETTA_BASE_URL` | `http://localhost:8283` | Letta server URL |
 
+### tasks.md 產生方式
+
+推薦使用 [spec-workflow-mcp](https://github.com/kingkongshot/specs-workflow-mcp) 自動產生：
+
+```bash
+# 安裝
+claude mcp add spec-workflow -- npx spec-workflow-mcp
+
+# 初始化新功能規格
+# Claude 會自動產生 docs/specs/{feature}/ 結構
+```
+
+產生的結構：
+```
+docs/specs/{feature}/
+├── requirements.md   # 需求規格
+├── design.md         # 設計文件
+└── tasks.md          # 任務清單 ← 本 hook 讀取此檔
+```
+
+tasks.md 使用標準 markdown checkbox：
+- `[x]` 完成的任務
+- `[~]` 進行中的任務
+- `[ ]` 待處理的任務
+
 ### 支援的目錄結構
 
 腳本會自動偵測以下規格目錄：
 - `docs/specs/`
 - `specs/`
 - `.specs/`
-- `documentation/specs/`
 
 ### 專案專屬覆蓋
 
