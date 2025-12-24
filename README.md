@@ -264,7 +264,7 @@ MIT
 
 ## 相關連結
 
-- [letta-memory-mcp](https://github.com/miles990/letta-memory-mcp) - MCP Server for Letta memory tools (memory_recall, memory_update, memory_archive)
+- [claude-dev-memory](https://github.com/miles990/claude-dev-memory) - MCP Server for Claude Code project memory (memory_recall, memory_update, memory_archive)
 - [Claude Code](https://claude.ai/code)
 - [Claude Code Hooks 文件](https://code.claude.com/docs/en/hooks)
 - [Letta (MemGPT)](https://docs.letta.com/)
