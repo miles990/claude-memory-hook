@@ -216,6 +216,11 @@ elif [ -f "CLAUDE.md" ] && grep -q "PDCA\|Milestone" "CLAUDE.md" 2>/dev/null; th
     echo -e "  ${C_DIM}•${C_RESET} Milestone 完成後 commit"
 fi
 
+# Letta Memory 工具提示
+if [ -n "$LETTA_API_KEY" ] && [ -n "$LETTA_AGENT_ID" ]; then
+    echo -e "${C_DIM}💡 memory_recall / memory_update / memory_archive 可管理記憶${C_RESET}"
+fi
+
 echo ""
 
 exit 0
